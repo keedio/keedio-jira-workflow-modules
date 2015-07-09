@@ -1,0 +1,8 @@
+<tr>
+    <td class="fieldLabelArea">
+        Max assigned issues per user:
+    </td>
+    <td nowrap>
+        <input name="maxAssignedIssuesPerUser" id="maxAssignedIssuesPerUser" value="${textutils.htmlEncode($maxAssignedIssuesPerUser)}" />
+    </td>
+</tr>
