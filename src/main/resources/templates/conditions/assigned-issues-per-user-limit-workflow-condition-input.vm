@@ -3,6 +3,16 @@
         Max assigned issues per user:
     </td>
     <td nowrap>
-        <input name="maxAssignedIssuesPerUser" id="maxAssignedIssuesPerUser" value="${textutils.htmlEncode($maxAssignedIssuesPerUser)}" />
+        <input name="maxAssignedIssuesPerUser" id="maxAssignedIssuesPerUser"
+               value="${textutils.htmlEncode($maxAssignedIssuesPerUser)}" />
     </td>
 </tr>
+<tr>
+    <td class="fieldLabelArea">
+        Filter for issues having the following status:
+    </td>
+    <td nowrap>
+        <input name="filterStatus" id="filterStatus"
+               value="${textutils.htmlEncode($filterStatus)}" />
+    </td>
+</td>

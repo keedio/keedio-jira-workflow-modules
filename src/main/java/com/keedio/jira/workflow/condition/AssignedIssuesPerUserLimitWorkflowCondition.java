@@ -8,6 +8,7 @@ import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.ApplicationUsers;
 import com.atlassian.query.Query;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.atlassian.jira.issue.Issue;
@@ -20,6 +21,7 @@ public class AssignedIssuesPerUserLimitWorkflowCondition extends AbstractJiraCon
 {
     private static final Logger log = LoggerFactory.getLogger(AssignedIssuesPerUserLimitWorkflowCondition.class);
     public static final String MAX_ASSIGNED_ISSUES_PER_USER ="maxAssignedIssuesPerUser";
+    public static final String FILTER_STATUS = "filterStatus";
 
     private SearchProvider searchProvider;
 
@@ -29,6 +31,15 @@ public class AssignedIssuesPerUserLimitWorkflowCondition extends AbstractJiraCon
 
     public boolean passesCondition(Map transientVars, Map args, PropertySet ps)
     {
+        String filterStatus = (String)args.get(FILTER_STATUS);
+
+        if (StringUtils.isEmpty(filterStatus)){
+            log.error("Filter status cannot be null");
+            throw new RuntimeException("Filter status cannot be null");
+        }
+
+        log.info("Filter status: " + filterStatus);
+
         long maxAssignedIssuesParam = 0;
         try {
             log.info("Max admitted issues assigned per user: " + args.get(MAX_ASSIGNED_ISSUES_PER_USER));
@@ -44,12 +55,14 @@ public class AssignedIssuesPerUserLimitWorkflowCondition extends AbstractJiraCon
 
         log.info("Issue: "+ issue.getKey());
 
+        /*
         boolean isAssigned = issue.getAssignee() != null && issue.getAssignee().isActive();
 
         if (!isAssigned){
             log.debug("Issue has not been assigned yet! Cannot transition to the final state.");
             return false;
         }
+        */
 
         JiraAuthenticationContext jiraAuthenticationContext =
                 ComponentAccessor.getJiraAuthenticationContext();
@@ -57,26 +70,38 @@ public class AssignedIssuesPerUserLimitWorkflowCondition extends AbstractJiraCon
         ApplicationUser loggedInUser = jiraAuthenticationContext.getUser();
         log.info("LoggedUser: " + loggedInUser.getUsername());
 
+
+        /*
         ApplicationUser assignee = ApplicationUsers.from(issue.getAssigneeUser());
         log.info("Assignee: "+assignee.getUsername());
 
-        Query q = JqlQueryBuilder.newBuilder()
+        Query qAssignee = JqlQueryBuilder.newBuilder()
                 .where()
                     .assigneeUser(assignee.getUsername())
                     .and()
                     .status("In Progress")
                 .buildQuery();
 
-        log.info("Query: "+q.toString());
+
+        log.info("Query assignee: " + qAssignee.toString());
+        */
+        Query qLoggedUser = JqlQueryBuilder.newBuilder()
+                .where()
+                .assigneeUser(loggedInUser.getUsername())
+                .and()
+                .status(filterStatus)
+                .buildQuery();
 
         //  ComponentAccessor.getIssueIndexManager().getIssueSearcher().search();
 
         try {
-            long assigned = searchProvider.searchCount(q, loggedInUser);
+            //long assignedAssignee = searchProvider.searchCount(qAssignee, loggedInUser);
+            long assignedLoggedInUser = searchProvider.searchCount(qLoggedUser, loggedInUser);
 
-            log.info("Number of assigned issues: " + assigned);
 
-            return assigned < maxAssignedIssuesParam;
+            log.info("Number of assigned issues: " + assignedLoggedInUser);
+
+            return assignedLoggedInUser < maxAssignedIssuesParam;
         } catch (SearchException e) {
             log.error("Exception", e);
             throw new RuntimeException(e);

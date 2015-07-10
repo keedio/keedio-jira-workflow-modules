@@ -1,1 +1,1 @@
-The transition can be performed only if the assignee does not have more than '${textutils.htmlEncode($maxAssignedIssuesPerUser)}' already assigned issues.
+The transition can be performed only if the assignee does not have more than '${textutils.htmlEncode($maxAssignedIssuesPerUser)}' with the status '${textutils.htmlEncode($filterStatus)}'.
